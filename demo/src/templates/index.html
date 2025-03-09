@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <title>Entity Linking Demo</title>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div class="container">
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Entity Linking Demo</a>
+      </nav>
+
+      <div class="mt-5">
+        <div class="mt-4 p-3 border rounded" style="border: 1px solid whitesmoke; background-color: #f9f9f9;">
+          <h5 class="mb-1">Info</h5>
+          <p class="mb-1">Enter a query below to retrieve relevant entities.</p>
+          <p class="mb-1">Search parameters:</p>
+          <ul class="mb-0" style="padding-left: 20px;">
+              <li>Top-K: the maximum number of entities to be displayed.</li>
+              <li>Threshold: the minimum similarity score for an entity to be retrieved.</li>
+          </ul>
+        </div>   
+
+        <form id="searchForm" action="/api/search" method="get">
+          <div class="form-group mb-3 mt-3">
+            <input type="text" class="form-control" id="query" name="query" required>
+          </div>
+
+          <div class="range-container mb-3">
+            <div class="form-group">
+              <span id="topk_value">Top k: 10</span>
+              <input type="range" class="form-control" id="topk_range" name="topk" min="0" max="30" step="1" value="10">
+            </div>
+
+            <div class="form-group">
+              <div id="threshold_value">Threshold: 0.5</div>
+              <input type="range" class="form-control" id="threshold" name="threshold" min="0" max="1" step="0.01" value="0.5">
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Search</button>
+          </div>
+        </form>
+
+        <!-- Moved search info div here -->
+        <div id="searchInfo" class="mt-3 mb-2" style="font-size: 0.8rem; color: #6c757d;"></div>
+
+        <div id="searchResults" class="mt-2" style="max-height: 500px; overflow-y: auto;"></div>
+        
+      </div>
+    </div>
+  </div>
+
+  <footer class="pt-6" style="background-color: whitesmoke;">
+    <div class="container text-md-left">
+      <div class="row">
+        <div class="col-md-6 mt-md-0 mt-3">
+          <h5 class="text-uppercase">Info</h5>
+          <div>
+            This work is a project from:<br/>
+            Lehrstuhl für IT-Infrastrukturen für die Translationale Medizinische Forschung<br/>
+            Universität Augsburg<br/>
+            <br/>
+            Visit our <a href="https://www.uni-augsburg.de/de/fakultaet/fai/informatik/prof/misit/">website</a>!
+          </div>
+        </div>
+        <hr class="clearfix w-100 d-md-none pb-3">
+        <div class="col-md-6 mb-md-0 mb-6">
+          <h5 class="text-uppercase">Resources</h5>
+          <ul class="list-unstyled">
+            <li><a href="https://github.com/yourrepo">GitHub Page</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="text-center py-3">
+      IT-Infrastrukturen für die Translationale Medizinische Forschung -
+      <a href="https://www.uni-augsburg.de/de/impressum/">Impressum</a>
+      &middot;
+      <a href="https://www.uni-augsburg.de/de/impressum/datenschutz/">Datenschutz</a>
+    </div>
+  </footer>
+
+  <script src="/static/js/jquery-3.7.1.slim.min.js"></script>
+  <script src="/static/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.getElementById('searchForm').onsubmit = async function (event) {
+      event.preventDefault();
+  
+      const query = document.getElementById('query').value;
+      const topk = document.getElementById('topk_range').value;
+      const threshold = document.getElementById('threshold').value;
+      
+      const resultsDiv = document.getElementById('searchResults');
+      resultsDiv.innerHTML = '';
+      
+      const searchInfoDiv = document.getElementById('searchInfo');
+      searchInfoDiv.innerHTML = 'Searching...';
+  
+      const response = await fetch(`/api/search?query=${encodeURIComponent(query)}&topk=${topk}&threshold=${threshold}`);
+      const data = await response.json();
+      
+      searchInfoDiv.innerHTML = `Retrieved ${data.results.length} results (${data.time} sec)`;
+
+      if (data.results && data.results.length > 0) {
+          let resultsHTML = '<ul class="list-group">';
+  
+          data.results.forEach(result => {
+                resultsHTML += `
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-8 text-left">
+                                ${result.code} ${result.concept}  
+                            </div>
+                            <div class="col-auto text-right ml-auto text-muted fst-italic">
+                                similarity=${result.similarity.toFixed(4)}
+                            </div>
+                        </div>
+                    </li>
+                `;
+          });
+  
+          resultsHTML += '</ul>';
+          resultsDiv.innerHTML = resultsHTML;
+        
+      } else {
+          resultsDiv.innerHTML = '<p>No results found.</p>';
+      }
+    };
+  
+    document.getElementById('threshold').addEventListener('input', function() {
+        document.getElementById('threshold_value').textContent = "Threshold: " + this.value;
+    });
+  
+    document.getElementById('threshold_value').textContent = "Threshold: " + document.getElementById('threshold').value;
+  
+    document.getElementById('topk_range').addEventListener('input', function() {
+        document.getElementById('topk_value').textContent = "Top k: " + this.value;
+    });
+  
+    document.getElementById('topk_value').textContent = "Top k: " + document.getElementById('topk_range').value;
+  </script>
+
+</body>
+</html>
