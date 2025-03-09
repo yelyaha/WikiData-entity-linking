@@ -2,7 +2,7 @@
 
 A demo app for medical entity linking using a custom Transformer model from the [Hugging Face Hub](https://huggingface.co), with PostgreySQL and pgvector for efficient vector retrieval.
 
-<img src="assets/demo_screenshot.png" width="500" />
+<img src="assets/demo_screenshot.png" width="800" />
 
 ## Quick Start
 
